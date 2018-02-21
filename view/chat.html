@@ -1,0 +1,67 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3 col-md-3">
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+            <span id="connected" class='badge badge-success' style="display: none">Connected</span>
+            <span id="disconnected" class='badge badge-danger' style="display: block">Disconnected</span>
+            <br>
+            <form class="form-inline">
+                <input type="text" class="form-control mb-2 mr-sm-2" id="input">
+                <button type="button" class="btn btn-outline-success mb-2" onclick="send()">Send</button>
+            </form>
+            <div id="output"></div>
+        </div>
+        <div class="col-lg-3 col-md-3">
+        </div>
+    </div>
+</div>
+
+
+<script src="/iris-ws.js"></script>
+
+<script>
+    var scheme = document.location.protocol == "https:" ? "wss" : "ws";
+    var port = document.location.port ? (":" + document.location.port) : "";
+    var wsURL = scheme + "://" + document.location.hostname + port+"/echo";
+    var input = document.getElementById("input");
+    var output = document.getElementById("output");
+    var socket = new Ws(wsURL)
+    socket.OnConnect(function () {
+        document.getElementById("disconnected").style.display = 'none';
+        document.getElementById("connected").style.display = 'block';
+    });
+    socket.OnDisconnect(function () {
+        document.getElementById("connected").style.display = 'none';
+        document.getElementById("disconnected").style.display = 'block';
+    });
+    socket.On("chat", function (msg) {
+        addMessage(msg);
+    });
+    function send() {
+        if (input.value != "") {
+            addMessage("ME:" + input.value);
+            socket.Emit("chat", input.value);
+            input.value = "";
+        }
+    }
+    function addMessage(msg) {
+        if (msg.search("ME:")) {
+            msg = msg.replace("ME:", "");
+            output.innerHTML += "<div class=\"alert alert-warning\" role=\"alert\">"+ msg +"</div>";
+        } else {
+            msg = msg.replace("ME:", "");
+            output.innerHTML += "<div class=\"alert alert-success\" role=\"alert\">"+ msg +"</div>";
+        }
+    }
+    //disable 'ENTER'
+    $('html').bind('keypress', function(e)
+    {
+        if(e.keyCode == 13)
+        {
+            return false;
+        }
+    });
+</script>
